@@ -6,6 +6,7 @@ This tool was specifically created to help Xiaomi users accurately track the exa
 
 ## Features
 * **Precision Timing:** Displays real-time system seconds (`HH:mm:ss`).
+* **Added milliseconds support:** Display millisecond (`HH:mm:mss`).
 * **Draggable Interface:** Easily move the clock anywhere on the screen.
 * **Ghost Mode:** Independent sliders for background opacity and text transparency.
 * **Customizable:** Adjust text size and toggle between 12-hour (AM/PM) and 24-hour formats.
