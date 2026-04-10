@@ -1,0 +1,5 @@
+// Top-level build file
+plugins {
+    // We use AGP 8.1.0 which works well with Java 17 and Android 34
+    id 'com.android.application' version '8.2.0' apply false
+}
