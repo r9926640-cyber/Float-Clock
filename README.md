@@ -25,18 +25,18 @@ This is a standard Android Gradle project. It contains no external dependencies 
 * Android SDK (API 34)
 
 **To build from the command line:**
-1. Clone the repository:
-   \`\`\`bash
-   git clone https://github.com/r9926640-cyber/Float-Clock.git
-   \`\`\`
-2. Navigate to the directory:
-   \`\`\`bash
-   cd Float-Clock
-   \`\`\`
-3. Compile the debug APK:
-   \`\`\`bash
-   ./gradlew assembleDebug
-   \`\`\`
+1. Clone the repository: 
+
+   git clone https://github.com/r9926640-cyber/Float-Clock.git 
+
+2. Navigate to the directory: 
+
+   cd Float-Clock 
+
+3. Compile the debug APK: 
+
+   ./gradlew assembleDebug 
+
    *The output APK will be located at \`app/build/outputs/apk/debug/app-debug.apk\`*
 
 **To build via IDE:**
