@@ -32,51 +32,23 @@ public class FloatingClockService extends Service {
     private Handler handler;
     private Runnable updateTimeRunnable;
     
-    private int currentOpacity = -1;
-    private int currentTextSize = -1;
-    private int currentTextOpacity = -1; // NEW
+    private int curOpacity = -1, curSize = -1, curTextOpacity = -1;
 
     @Override
     public void onCreate() {
         super.onCreate();
         isRunning = true;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "clock_channel", "Clock Service", NotificationManager.IMPORTANCE_LOW);
-            getSystemService(NotificationManager.class).createNotificationChannel(channel);
-            Notification notification = new Notification.Builder(this, "clock_channel")
-                    .setContentTitle("Floating Clock")
-                    .setContentText("Running...")
-                    .setSmallIcon(android.R.drawable.ic_menu_today)
-                    .build();
-
-            if (Build.VERSION.SDK_INT >= 34) {
-                startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
-            } else {
-                startForeground(1, notification);
-            }
-        } else {
-            Notification notification = new Notification.Builder(this)
-                    .setContentTitle("Floating Clock")
-                    .setContentText("Running...")
-                    .setSmallIcon(android.R.drawable.ic_menu_today)
-                    .build();
-            startForeground(1, notification);
-        }
+        setupNotification();
 
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_clock, null);
         clockText = floatingView.findViewById(R.id.clock_text);
 
         int layoutFlag = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? 
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 
-                WindowManager.LayoutParams.TYPE_PHONE;
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
 
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                layoutFlag,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutFlag, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 PixelFormat.TRANSLUCENT);
 
         params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
@@ -85,30 +57,7 @@ public class FloatingClockService extends Service {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         windowManager.addView(floatingView, params);
 
-        floatingView.setOnTouchListener(new View.OnTouchListener() {
-            private int initialX;
-            private int initialY;
-            private float initialTouchX;
-            private float initialTouchY;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initialX = params.x;
-                        initialY = params.y;
-                        initialTouchX = event.getRawX();
-                        initialTouchY = event.getRawY();
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
-                        params.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        windowManager.updateViewLayout(floatingView, params);
-                        return true;
-                }
-                return false;
-            }
-        });
+        setupTouchListener(params);
 
         handler = new Handler(Looper.getMainLooper());
         updateTimeRunnable = new Runnable() {
@@ -116,51 +65,58 @@ public class FloatingClockService extends Service {
             public void run() {
                 SharedPreferences prefs = getSharedPreferences("ClockPrefs", MODE_PRIVATE);
                 
-                // 1. Time Update
+                // Format logic with MS support
                 boolean useAmPm = prefs.getBoolean("useAmPm", false);
-                String formatPattern = useAmPm ? "hh:mm:ss a" : "HH:mm:ss";
-                SimpleDateFormat sdf = new SimpleDateFormat(formatPattern, Locale.getDefault());
-                clockText.setText(sdf.format(new Date()));
+                boolean useMs = prefs.getBoolean("useMs", false);
+                String pattern = (useAmPm ? "hh:mm:ss" : "HH:mm:ss") + (useMs ? ".SSS" : "") + (useAmPm ? " a" : "");
                 
-                // 2. Background Opacity Update
-                int prefOpacity = prefs.getInt("bgOpacity", 50);
-                if (prefOpacity != currentOpacity) {
-                    currentOpacity = prefOpacity;
-                    int alpha = (int) ((currentOpacity / 100f) * 255);
-                    floatingView.setBackgroundColor(Color.argb(alpha, 0, 0, 0));
-                }
+                clockText.setText(new SimpleDateFormat(pattern, Locale.getDefault()).format(new Date()));
                 
-                // 3. Text Size Update
-                int prefSize = prefs.getInt("textSize", 24);
-                if (prefSize != currentTextSize) {
-                    currentTextSize = prefSize;
-                    clockText.setTextSize(TypedValue.COMPLEX_UNIT_SP, currentTextSize);
-                }
+                updateVisuals(prefs);
 
-                // 4. Text Transparency Update
-                int prefTextOpacity = prefs.getInt("textOpacity", 100);
-                if (prefTextOpacity != currentTextOpacity) {
-                    currentTextOpacity = prefTextOpacity;
-                    // setAlpha takes a float from 0.0 to 1.0 (0 is invisible, 1 is fully visible)
-                    clockText.setAlpha(currentTextOpacity / 100f);
-                }
-
-                handler.postDelayed(this, 1000); 
+                // Update every 30ms for smooth milliseconds, or 1000ms if just seconds
+                handler.postDelayed(this, useMs ? 30 : 1000); 
             }
         };
         handler.post(updateTimeRunnable);
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null; 
+    private void setupNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel ch = new NotificationChannel("clock_ch", "Clock", NotificationManager.IMPORTANCE_LOW);
+            getSystemService(NotificationManager.class).createNotificationChannel(ch);
+            Notification n = new Notification.Builder(this, "clock_ch").setSmallIcon(android.R.drawable.ic_menu_today).build();
+            if (Build.VERSION.SDK_INT >= 34) startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            else startForeground(1, n);
+        }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        isRunning = false;
-        if (floatingView != null) windowManager.removeView(floatingView);
-        if (handler != null) handler.removeCallbacks(updateTimeRunnable);
+    private void setupTouchListener(WindowManager.LayoutParams p) {
+        floatingView.setOnTouchListener(new View.OnTouchListener() {
+            private int x, y; private float tx, ty;
+            @Override public boolean onTouch(View v, MotionEvent e) {
+                if (e.getAction() == MotionEvent.ACTION_DOWN) { x = p.x; y = p.y; tx = e.getRawX(); ty = e.getRawY(); }
+                else if (e.getAction() == MotionEvent.ACTION_MOVE) {
+                    p.x = x + (int)(e.getRawX()-tx); p.y = y + (int)(e.getRawY()-ty);
+                    windowManager.updateViewLayout(floatingView, p);
+                }
+                return true;
+            }
+        });
+    }
+
+    private void updateVisuals(SharedPreferences p) {
+        int op = p.getInt("bgOpacity", 50);
+        if (op != curOpacity) { curOpacity = op; floatingView.setBackgroundColor(Color.argb((int)(op/100f*255), 0,0,0)); }
+        int sz = p.getInt("textSize", 24);
+        if (sz != curSize) { curSize = sz; clockText.setTextSize(TypedValue.COMPLEX_UNIT_SP, sz); }
+        int top = p.getInt("textOpacity", 100);
+        if (top != curTextOpacity) { curTextOpacity = top; clockText.setAlpha(top/100f); }
+    }
+
+    @Override public IBinder onBind(Intent i) { return null; }
+    @Override public void onDestroy() { super.onDestroy(); isRunning = false; 
+        if(floatingView != null) windowManager.removeView(floatingView);
+        handler.removeCallbacks(updateTimeRunnable);
     }
 }

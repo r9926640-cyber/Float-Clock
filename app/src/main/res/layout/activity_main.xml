@@ -8,74 +8,75 @@
     android:background="#F5F5F5">
 
     <ImageView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:src="@drawable/ic_clock_logo"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Float Clock"
-        android:textSize="24sp"
+        android:text="Float Clock Pro"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:textColor="#333333"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="12dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#FFFFFF"
-        android:padding="16dp"
+        android:padding="12dp"
         android:elevation="4dp"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="20dp">
 
         <Switch
             android:id="@+id/switch_am_pm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Use 12-hour format (AM/PM)"
+            android:text="Use 12-hour (AM/PM)"
             android:textSize="14sp"
-            android:textColor="#333333"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="8dp"/>
+
+        <Switch
+            android:id="@+id/switch_ms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Show Milliseconds (.SSS)"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp"/>
 
         <TextView
-            android:id="@+id/label_text_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Text Size"
-            android:textSize="12sp"
-            android:textColor="#666666"/>
+            android:textSize="11sp"/>
         <SeekBar
             android:id="@+id/seek_text_size"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="40"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="8dp"/>
 
         <TextView
-            android:id="@+id/label_text_opacity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Text Transparency (Ghost Mode)"
-            android:textSize="12sp"
-            android:textColor="#666666"/>
+            android:text="Text Transparency"
+            android:textSize="11sp"/>
         <SeekBar
             android:id="@+id/seek_text_opacity"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="100"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="8dp" />
 
         <TextView
-            android:id="@+id/label_opacity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Background Opacity"
-            android:textSize="12sp"
-            android:textColor="#666666"/>
+            android:textSize="11sp"/>
         <SeekBar
             android:id="@+id/seek_opacity"
             android:layout_width="match_parent"
@@ -86,9 +87,8 @@
     <Button
         android:id="@+id/btn_toggle_clock"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="55dp"
         android:text="Start Clock"
-        android:textSize="18sp"
         android:textStyle="bold"
         android:backgroundTint="#2196F3"
         android:textColor="#FFFFFF"/>

@@ -24,9 +24,8 @@ public class MainActivity extends Activity {
     
     private Button toggleButton;
     private Switch amPmSwitch;
-    private SeekBar sizeSeek;
-    private SeekBar opacitySeek;
-    private SeekBar textOpacitySeek;
+    private Switch msSwitch;
+    private SeekBar sizeSeek, opacitySeek, textOpacitySeek;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +42,7 @@ public class MainActivity extends Activity {
 
         toggleButton = findViewById(R.id.btn_toggle_clock);
         amPmSwitch = findViewById(R.id.switch_am_pm);
+        msSwitch = findViewById(R.id.switch_ms);
         sizeSeek = findViewById(R.id.seek_text_size);
         opacitySeek = findViewById(R.id.seek_opacity);
         textOpacitySeek = findViewById(R.id.seek_text_opacity);
@@ -50,64 +50,37 @@ public class MainActivity extends Activity {
         final SharedPreferences prefs = getSharedPreferences("ClockPrefs", MODE_PRIVATE);
         
         amPmSwitch.setChecked(prefs.getBoolean("useAmPm", false));
+        msSwitch.setChecked(prefs.getBoolean("useMs", false));
         sizeSeek.setProgress(prefs.getInt("textSize", 24) - 12); 
         opacitySeek.setProgress(prefs.getInt("bgOpacity", 50));
-        textOpacitySeek.setProgress(prefs.getInt("textOpacity", 100)); // Default fully visible
+        textOpacitySeek.setProgress(prefs.getInt("textOpacity", 100));
 
-        amPmSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                prefs.edit().putBoolean("useAmPm", isChecked).apply();
-            }
-        });
+        amPmSwitch.setOnCheckedChangeListener((b, isChecked) -> prefs.edit().putBoolean("useAmPm", isChecked).apply());
+        msSwitch.setOnCheckedChangeListener((b, isChecked) -> prefs.edit().putBoolean("useMs", isChecked).apply());
 
         sizeSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                prefs.edit().putInt("textSize", progress + 12).apply();
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            @Override public void onProgressChanged(SeekBar s, int p, boolean f) { prefs.edit().putInt("textSize", p + 12).apply(); }
+            @Override public void onStartTrackingTouch(SeekBar s) {} @Override public void onStopTrackingTouch(SeekBar s) {}
         });
 
         opacitySeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                prefs.edit().putInt("bgOpacity", progress).apply();
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            @Override public void onProgressChanged(SeekBar s, int p, boolean f) { prefs.edit().putInt("bgOpacity", p).apply(); }
+            @Override public void onStartTrackingTouch(SeekBar s) {} @Override public void onStopTrackingTouch(SeekBar s) {}
         });
 
-        // NEW: Text Transparency Slider Listener
         textOpacitySeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                prefs.edit().putInt("textOpacity", progress).apply();
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            @Override public void onProgressChanged(SeekBar s, int p, boolean f) { prefs.edit().putInt("textOpacity", p).apply(); }
+            @Override public void onStartTrackingTouch(SeekBar s) {} @Override public void onStopTrackingTouch(SeekBar s) {}
         });
 
-        updateButtonState();
-
-        toggleButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (FloatingClockService.isRunning) {
-                    stopClockService();
-                } else {
-                    checkPermissionsAndStart();
-                }
-            }
+        toggleButton.setOnClickListener(v -> {
+            if (FloatingClockService.isRunning) stopService(new Intent(this, FloatingClockService.class));
+            else checkPermissionsAndStart();
+            updateButtonState();
         });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        updateButtonState();
-    }
+    @Override protected void onResume() { super.onResume(); updateButtonState(); }
 
     private void updateButtonState() {
         if (FloatingClockService.isRunning) {
@@ -124,44 +97,12 @@ public class MainActivity extends Activity {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQ_CODE);
             return;
         }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-            startActivityForResult(intent, OVERLAY_PERMISSION_REQ_CODE);
+            startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())), OVERLAY_PERMISSION_REQ_CODE);
             return;
         }
-
-        startClockService();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == NOTIFICATION_PERMISSION_REQ_CODE) checkPermissionsAndStart();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-                checkPermissionsAndStart();
-            } else {
-                Toast.makeText(this, "Overlay permission is required!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void startClockService() {
-        Intent intent = new Intent(this, FloatingClockService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent);
-        } else {
-            startService(intent);
-        }
-        updateButtonState();
-    }
-
-    private void stopClockService() {
-        stopService(new Intent(this, FloatingClockService.class));
+        Intent i = new Intent(this, FloatingClockService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i); else startService(i);
         updateButtonState();
     }
 }
