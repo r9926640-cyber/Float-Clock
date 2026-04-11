@@ -43,6 +43,7 @@ Based on real-world testing from high-latency regions (e.g., using a VPN), there
 2. **Calculate your Lag:** Observe how long the "Requesting..." spinner takes to respond during a normal attempt.
 3. **The Burst Window:** * If your lag is ~1.5s, start your high-speed tapping burst at **58:500**.
    * If your lag is <0.5s (vpn or No VPN), start your burst at **59:700**.
+   * Observe the best value your self.
 
 
 
