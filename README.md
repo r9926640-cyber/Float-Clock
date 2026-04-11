@@ -4,6 +4,13 @@ A lightweight, precision floating clock overlay designed for Android.
 
 This tool was specifically created to help Xiaomi users accurately track the exact system seconds needed to secure a daily quota slot for the **HyperOS Bootloader Unlock** process. 
 
+First download the Xioami community apk
+
+you can get the app using Google search 
+download the letest version and setup the app login and global region 
+
+now read the instructions try to get a permission slot
+
 ## Features
 * **Precision Timing:** Displays real-time system seconds (`HH:mm:ss`).
 * **Added milliseconds support:** Display millisecond (`HH:mm:ss:mss`).
