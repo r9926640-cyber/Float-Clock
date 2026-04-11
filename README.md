@@ -30,7 +30,7 @@ Due to Xiaomi's aggressive permission management, standard overlay permissions a
 To successfully secure a HyperOS bootloader unlock slot, you must account for **Network Latency** (the time it takes for your tap to reach Xiaomi's servers in China).
 
 ### The "Pre-Fire" Math
-Based on real-world testing from high-latency regions (e.g., using a VPN), there is often a delay of **~1.5 seconds**. To land your request at exactly `00:00:00.100` Beijing Time, you must compensate for this "lag" by tapping early.
+Based on real-world testing from high-latency regions (e.g., using a VPN), there is often a delay of **~0.5 to 1.5 seconds**. To land your request at exactly `00:00:00.100` Beijing Time, you must compensate for this "lag" by tapping early.
 
 **Example Latency Profile:**
 * **Finger Tap:** 09:29:58:600 (IST)
